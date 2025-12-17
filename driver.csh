@@ -20,12 +20,13 @@
 #PBS -S /bin/csh
 #PBS -N driver
 #PBS -A P48503002
-#PBS -l walltime=60:00
+#PBS -l walltime=20:00
 #PBS -q main
 #PBS -o ./output_file
 #PBS -j oe 
 #PBS -k eod 
-#PBS -l select=1:ncpus=1:mpiprocs=1
+#PBS -l select=1:ncpus=1:mpiprocs=1:mem=30gb
+#PBS -l job_priority=premium
 #PBS -m n    
 #PBS -V 
 #
@@ -40,16 +41,15 @@
 
 # Basic system information
 setenv batch_system         PBS # Type of submission system. 
-setenv num_procs_per_node   12  # Number of processors per node on the machine
+setenv num_procs_per_node   128  # Number of processors per node on the machine
 setenv run_cmd              "mpirun" # Command to run MPI executables #"mpirun.lsf"
 
 # Total number of processors to use (not the number of nodes)
-setenv NUM_PROCS_MPAS_ATM   12
-setenv NUM_PROCS_MPAS_INIT  128 # 180
-setenv num_mpas_procs_per_node  12  # Number of processors per node you want to use for MPAS forecasts (not intialization) -- not used for slurm
-
-setenv mpas_init_walltime 120      #Run-time (minutes) for MPAS initialization
-setenv mpas_fcst_walltime 240      #Run-time (minutes) for MPAS forecasts
+setenv NUM_PROCS_MPAS_ATM   1280
+setenv NUM_PROCS_MPAS_INIT  1280 # 180
+setenv num_mpas_procs_per_node  128  # Number of processors per node you want to use for MPAS forecasts (not intialization) -- not used for slurm
+setenv mpas_init_walltime 240      #Run-time (minutes) for MPAS initialization
+setenv mpas_fcst_walltime 480      #Run-time (minutes) for MPAS forecasts
 setenv mpas_account   "P48503002"  # core-hour accoun
 setenv mpas_queue     "main"   # system queue
 
@@ -64,26 +64,34 @@ setenv RUN_UPP                 false
 # Directories pointing to source code and required datasets #
 #######################################
 # Path and directory containing all code and scripts
-setenv   HOMEDIR              /glade/campaign/ral/jntp/weiweili/MMM_model/workflow/dev_mwf
+setenv   HOMEDIR              /glade/work/wmayfield/dtc_ncar_mpas
 
 # Path to all scripts (e.g., *.csh) under dtc_mpas_workflow
-setenv   SCRIPT_DIR           ${HOMEDIR}/dtc_mpas_workflow
+setenv   SCRIPT_DIR           ${HOMEDIR}/dtc_mpas_workflow_20250721
 
 # Path to MPAS model code - could be different from MPAS_INIT_CODE_DIR (MPAS initialization code; fetch the code: git clone https://github.com/MPAS-Dev/MPAS-Model.git)
 #setenv   MPAS_CODE_DIR        ${HOMEDIR}/MPAS-Model
-setenv    MPAS_CODE_DIR       /glade/campaign/ral/jntp/mayfield/mpas_stoch/merge/MPAS-Model_spptint
+#setenv    MPAS_CODE_DIR       /glade/campaign/ral/jntp/mayfield/mpas_stoch/merge/MPAS-Model_spptint
+#setenv    MPAS_CODE_DIR       /glade/work/wmayfield/dtc_ncar_mpas/MPAS-Model_8.3.1
+#setenv    MPAS_CODE_DIR       /glade/work/wmayfield/dtc_ncar_mpas/MPAS-Model_ufs-community_20250922
+setenv    MPAS_CODE_DIR       /glade/work/wmayfield/dtc_ncar_mpas/MPAS-Model_ufs-community_v8.3.1-2.5
 
 # Path to MPAS-A initialization source code 
 setenv   MPAS_INIT_CODE_DIR   $MPAS_CODE_DIR
 
 # Path to MPASSIT code
 # Optional (one need to have it built on Derecho)
-setenv   MPASSIT_CODE_DIR     /scratch2/BMC/fv3lam/HWT/code/MPASSIT
+#setenv   MPASSIT_CODE_DIR     /scratch2/BMC/fv3lam/HWT/code/MPASSIT
+#setenv   MPASSIT_CODE_DIR     /glade/derecho/scratch/jmantovani/MPASSIT/
+setenv  MPASSIT_CODE_DIR        /glade/work/wmayfield/dtc_ncar_mpas/MPASSIT
 
 # Path to UPP code
 # Optional (one needs to have it built on Derecho)
-setenv   UPP_CODE_DIR        /scratch2/BMC/fv3lam/HWT/code/UPP_NSSL
-setenv   UPP_CODE_DIR        /scratch2/BMC/fv3lam/ajohns/mpas_pp
+#setenv   UPP_CODE_DIR        /scratch2/BMC/fv3lam/HWT/code/UPP_NSSL
+#setenv   UPP_CODE_DIR        /scratch2/BMC/fv3lam/ajohns/mpas_pp
+#setenv UPP_CODE_DIR     /glade/derecho/scratch/kavulich/UFS/workdir/test_develop/2025-07-26/intel/ufs-srweather-app/exec/
+#setenv UPP_CODE_DIR    /glade/work/wmayfield/dtc_ncar_mpas/ufs-srweather-app/exec 
+setenv UPP_CODE_DIR    /glade/work/wmayfield/dtc_ncar_mpas/UPP_20251207/exec 
 
 # Path to WPS, where ungrib.exe is located for MPAS initialization
 # Not platform agnostic. Hera has it built somewhere, which is used in mpas_app.
@@ -99,31 +107,34 @@ setenv   VTABLE_DIR           $SCRIPT_DIR
 # Path to MPAS static geographic datasets, needed for MPAS initialization
 # TODO: Not platform agnostic. Can pull from https://www2.mmm.ucar.edu/projects/mpas/site/access_code/static.html and created a directory to contain these files
 # TODO: not all files in WPS_GEOG are used for MPAS. Also consider renaming WPS to something more MPAS?
-setenv   WPS_GEOG_DIR         /glade/u/home/wrfhelp/WPS_GEOG
+#setenv   WPS_GEOG_DIR         /glade/u/home/wrfhelp/WPS_GEOG
+setenv   WPS_GEOG_DIR         /glade/derecho/scratch/mawilson/mpas_tests/regional_test/LAND_DATA
 
 ############################################################
 # Naming top-level directory of the experiment #
 ############################################################
 
 # Self-defined experiment name
-setenv EXPT      test_wl      # The experiment name that you are running
+setenv EXPT      DTC_NCAR_hrrrIC      # The experiment name that you are running
 
 # Self-defined experiment name with mesh information (a subdirectory of $EXPT)
-setenv MESH      conus_15km_ensemble
+setenv MESH      OK_1km_hex
 
 ###########################
 # Experiment configurations #
 ###########################
 
 # Starting and Ending forecast initialization date/time (forecast cycle related)
-setenv START_INIT    2022050100  # starting and ending forecast initialization times
-setenv END_INIT      2022050100
+#setenv START_INIT    2024021617  # starting and ending forecast initialization times
+#setenv END_INIT      2024021617
+setenv START_INIT    2025052200  # starting and ending forecast initialization times
+setenv END_INIT      2025052200
 
 # Interval (in hours) between forecast cycles/initializations, needed for running WRF-DA (da_advance_time.exe)
 setenv INC_INIT      24
 
 # Length of forecasts/simulations (in hours)
-setenv FCST_RANGE              12    #Length of MPAS forecasts (hours)
+setenv FCST_RANGE              36    #Length of MPAS forecasts (hours)
 
 # Diagnostic file output frequency (in hours)
 setenv diag_output_interval    1
@@ -138,13 +149,16 @@ setenv update_sst  .false.
 setenv MPAS_REGIONAL .true.
 
 # Frequency of applying lateral boundary condition (LBC; in hours)
-setenv LBC_FREQ 6          
+setenv LBC_FREQ 1          
 
 #This is the model providing initial conditions for MPAS. Mostly needed to tell the MPAS initialization
 #  how many vertical levels to expect in the GRIB files.  See run_mpas_init.csh
-setenv  COLD_START_INITIAL_CONDITIONS_MODEL GEFS # (GFS, GEFS, RRFS, HRRR.pressure)
-setenv  COLD_START_BOUNDARY_CONDITIONS_MODEL_CTL GFS #atj: new variable                                                                                  
-setenv  COLD_START_BOUNDARY_CONDITIONS_MODEL_PERT GEFS #atj: new variable 
+#setenv  COLD_START_INITIAL_CONDITIONS_MODEL GEFS # (GFS, GEFS, RRFS, HRRR.pressure)
+setenv  COLD_START_INITIAL_CONDITIONS_MODEL raphrrr # (GFS, GEFS, RRFS, HRRR.pressure)
+#setenv  COLD_START_BOUNDARY_CONDITIONS_MODEL_CTL GFS #atj: new variable                                                                                  
+setenv  COLD_START_BOUNDARY_CONDITIONS_MODEL_CTL raphrrr #atj: new variable                                                                                  
+#setenv  COLD_START_BOUNDARY_CONDITIONS_MODEL_PERT GEFS #atj: new variable 
+setenv  COLD_START_BOUNDARY_CONDITIONS_MODEL_PERT raphrrr #atj: new variable 
 #setenv  COLD_START_BOUNDARY_CONDITIONS_MODEL GFS
 
 # Ensemble size for the forecasts (note: all ensemble members are run all at once)
@@ -164,7 +178,8 @@ setenv      STREAMS_TEMPLATE         ${SCRIPT_DIR}/streams_template.csh
 
 # Directory to IC and LBC data (must be in GRIB format), which will be ingested into ungrib.exe to generate intermediate IC and LBC files (sub-directories by ensemble member and initialization time)
 # Need to manually set up ens_* and lbc_*0
-setenv      GRIB_INPUT_DIR_MODEL      /glade/campaign/ral/jntp/mayfield/dtc_ncar_mpas/ic_bc_data
+#setenv      GRIB_INPUT_DIR_MODEL      /glade/campaign/ral/jntp/mayfield/dtc_ncar_mpas/ic_bc_data
+setenv      GRIB_INPUT_DIR_MODEL      /glade/campaign/ral/jntp/mayfield/dtc_ncar_mpas/ic_bc_data/hrrr
 
 # As GRIB_INPUT_DIR_MODEL but for SST data
 setenv      GRIB_INPUT_DIR_SST       $GRIB_INPUT_DIR_MODEL
@@ -176,27 +191,27 @@ setenv      ungrib_prefx_model   "FILE"
 setenv      ungrib_prefx_sst     "FILE"
 
 # Directory to contain intermediate files "FILE*" generated by WPS ungrib.exe for IC and LBC data (sub-dirs arranged by date/ensemble_member)
-setenv   UNGRIB_OUTPUT_DIR_MODEL      ${HOMEDIR}/${EXPT}/ungrib_met
+setenv   UNGRIB_OUTPUT_DIR_MODEL      /glade/derecho/scratch/wmayfield/dtc_ncar_mpas/expt_dirs/${EXPT}/${MESH}/ungrib_met
 # Directory to contain intermediate files "FILE*" generated by WPS ungrib.exe for SST data (if SST is periodically updated) (sub-dirs arranged by date/ensemble_member)
-setenv   UNGRIB_OUTPUT_DIR_SST        ${HOMEDIR}/${EXPT}/ungrib_sst
+setenv   UNGRIB_OUTPUT_DIR_SST        /glade/derecho/scratch/wmayfield/dtc_ncar_mpas/expt_dirs/${EXPT}/ungrib_sst
 
 
 ########################################################################
 # Directories containing files/data ingested to and produced by MPAS-A
 ########################################################################
 # Directory to hold MPAS initialization files (sub-dirs arranged by date/ensemble_member)
-setenv   MPAS_INIT_DIR                ${HOMEDIR}/${EXPT}/${MESH}/mpas_init
+setenv   MPAS_INIT_DIR                /glade/derecho/scratch/wmayfield/dtc_ncar_mpas/expt_dirs/${EXPT}/${MESH}/mpas_initi_8.3.1-2.5
 
 # Directory to save MPAS-A simulation output (sub-dirs arranged by date/ensemble_member)
-setenv   EXP_DIR                      ${HOMEDIR}/${EXPT}/${MESH}/mpas_atm
+setenv   EXP_DIR                      /glade/derecho/scratch/wmayfield/dtc_ncar_mpas/expt_dirs/${EXPT}/${MESH}/mpas_atm_8.3.1-2.5
 
 #########################################################
 # Directories containing postprocessed data if appliable
 #########################################################
 # Directory to save all post-processed data produced by MPASSIT
-setenv   MPASSIT_OUTPUT_DIR           ${HOMEDIR}/${EXPT}/${MESH}/mpassit
+setenv   MPASSIT_OUTPUT_DIR           /glade/derecho/scratch/wmayfield/dtc_ncar_mpas/expt_dirs/${EXPT}/${MESH}/mpassit
 # Directory to save all post-processed data produced by UPP
-setenv   UPP_OUTPUT_DIR_TOP           ${HOMEDIR}/${EXPT}/${MESH}/upp
+setenv   UPP_OUTPUT_DIR           /glade/derecho/scratch/wmayfield/dtc_ncar_mpas/expt_dirs/${EXPT}/${MESH}/upp
 
 
 ############################
@@ -209,10 +224,12 @@ setenv   UPP_OUTPUT_DIR_TOP           ${HOMEDIR}/${EXPT}/${MESH}/upp
 
 # Directory containing MPAS mesh, grid and static files
 # TODO: Archive all the DTC generated mesh to a generic place under JNT?
-setenv    MPAS_GRID_INFO_DIR      /glade/campaign/ral/jntp/mayfield/dtc_ncar_mpas/meshes/ # Directory containing MPAS grid files, must be there
+#setenv    MPAS_GRID_INFO_DIR      /glade/campaign/ral/jntp/mayfield/dtc_ncar_mpas/meshes/ # Directory containing MPAS grid files, must be there
+#setenv    MPAS_GRID_INFO_DIR      /glade/work/wmayfield/dtc_ncar_mpas/from_Jeff/MPAS-v8merge_init_intel # Directory containing MPAS grid files, must be there
+setenv    MPAS_GRID_INFO_DIR      /glade/work/wmayfield/dtc_ncar_mpas/static_OK # Directory containing MPAS grid files, must be there
 
 # Specify which "mesh decomposition file" (under $MPAS_GRID_INFO_DIR) to be used, usually named as *graph.info.part.* (in ASCII format), the number after this prefixdenotes an appropriate number of partitions that are equal to the number of MPI tasks that will be used
-setenv    graph_info_prefx        conus_15km.graph.info.part.
+setenv    graph_info_prefx        OK_1km_hex.graph.info.part.
 
 # Path to SCVT mesh (under $MPAS_GRID_INFO_DIR) - usually named as *.grid.nc. (in netCDF format)
 # !!CRITICAL: For running global simulation, this must exist or be pre-generated when using this workflow
@@ -220,12 +237,12 @@ setenv    graph_info_prefx        conus_15km.graph.info.part.
 # For running CONUS simulations, one can find a few existing meshes under /glade/campaign/ral/jntp/mayfield/dtc_ncar_mpas/meshes. These meshes can be created using tool "create_region" (https://github.com/MPAS-Dev/MPAS-Limited-Area) that uses MPAS global grid to produce a regional area grid given a region specifications
 # For running other limited-area simulation, one can generate regional mesh by using "create_region" tool.
 # TODO: need to have a generic place to store these pre-created meshes. Also WL don't understand "#not for regional though b/c you'll start with static.nc" 
-setenv    grid_file_netcdf        ${MPAS_GRID_INFO_DIR}/conus_15km.grid.nc 
+setenv    grid_file_netcdf        ${MPAS_GRID_INFO_DIR}/OK_1km_hex.grid.nc
 
 # Path to MPAS static file to be created if not exist (NOTE: it is required to initialize MPAS and is generated based on $WPS_GEOG_DIR) (under $MPAS_GRID_INFO_DIR) - usually named as *.static.nc. (in netCDF format)
 # For global run, available static files can be downloaded at https://mpas-dev.github.io/atmosphere/atmosphere_meshes.html (for NCAR HPC users, some can be found at /glade/campaign/mmm/wmr/mpas_tutorial/meshes/). 
 # TODO: Not clear how regional static file is genereate, which approach? 1) use the create_region tool to create a subset of an existing global "static" file for specifield region, as in the tutorial, or 2) apply init_atmosphere to regional grid $grid_file_netcdf  
-setenv    mpas_static_data_file   ${MPAS_GRID_INFO_DIR}/conus_15km.static.nc
+setenv    mpas_static_data_file   /glade/work/wmayfield/dtc_ncar_mpas/static_OK/OK_1km_hex.static.nc
 
 
 ############################################################################
@@ -236,16 +253,16 @@ setenv    mpas_static_data_file   ${MPAS_GRID_INFO_DIR}/conus_15km.static.nc
 # Vertical grid dimensions, same for both the ensemble and high-res determinsitic forecasts
 # --------------------------------------------------------------------------------------------
 setenv    num_mpas_vert_levels   55      # Number of vertical levels ( mass levels )
-setenv    num_mpas_soil_levels   4       # Number of soil levels
+setenv    num_mpas_soil_levels   9       # Number of soil levels
 #setenv    num_soilcat            16     #atj: added to be consistent with NSSL
 #setenv    z_top_meters           25878.712      # MH commenting out since not an integer
 #setenv    z_top_km               20      # MPAS model top (km)
 
-setenv    time_step              60.0   # Seconds. Typically should be 4-6*dx; use closer to 4 for cycling DA
-setenv    radiation_frequency    30     # Minutes. Typically the same as dx (for dx = 15 km, 15 minutes)
-setenv    config_len_disp        3000. # Meters, diffusion length scale, which should be finest resolution in mesh (not needed in MPASv8.0+)
+setenv    time_step              5.0   # Seconds. Typically should be 4-6*dx; use closer to 4 for cycling DA
+setenv    radiation_frequency    1     # Minutes. Typically the same as dx (for dx = 15 km, 15 minutes)
+setenv    config_len_disp        1000. # Meters, diffusion length scale, which should be finest resolution in mesh (not needed in MPASv8.0+)
 setenv    soundings_file         dum #${SCRIPT_DIR}/sounding_locations.txt   # set to a dummy to disable soundings
-setenv    physics_suite          "convection_permitting" #"mesoscale_reference" #"convection_permitting_wrf390" 
+setenv    physics_suite          "hrrrv5" #"mesoscale_reference" #"convection_permitting_wrf390" 
 #setenv    deep_conv_param       "cu_ntiedtke" #"cu_grell_freitas" # "tiedtke"
 
 # You can override physics suite individual parameterizations with these
@@ -303,10 +320,11 @@ while ( $DATE <= $END_INIT )
       else if ( $batch_system == PBS ) then
          set ii = `expr $IENS + 1`
          set last_member = "${ii}:2"
-	 set pp_init = `qsub -N "mpas_init_${DATE}" -A "$mpas_account" -q "$mpas_queue" -V \
-	                     -l walltime=${mpas_init_walltime}:00 -J ${IENS}-${last_member} -S "/bin/csh" \
-	                     -l "select=${this_num_needed_nodes}:ncpus=${this_num_procs_per_node}:mpiprocs=${this_num_procs_per_node}" \
-			      ${SCRIPT_DIR}/run_mpas_init.csh`
+#	 set pp_init = `qsub -N "mpas_init_${DATE}" -A "$mpas_account" -q "$mpas_queue" -V \
+#	                     -l walltime=${mpas_init_walltime}:00 -J ${IENS}-${last_member} -S "/bin/csh" \
+#	                     -l "select=${this_num_needed_nodes}:ncpus=${this_num_procs_per_node}:mpiprocs=${this_num_procs_per_node}" \
+#			      ${SCRIPT_DIR}/run_mpas_init.csh`
+	 set pp_init = `qsub -N "mpas_init_${DATE}" ${SCRIPT_DIR}/run_mpas_init.csh` 
       else if ( $batch_system == SBATCH ) then
         foreach mem ( `seq $IENS 1 $ENS_SIZE` )
           sbatch ${SCRIPT_DIR}/run_mpas_init.csh $mem
@@ -326,10 +344,11 @@ while ( $DATE <= $END_INIT )
 #   set pp_fcst = `qsub -N "run_mpas_${DATE}" -A "$mpas_account" -J ${IENS}-${ENS_SIZE} \
          set ii = `expr $IENS + 1`
          set last_member = "${ii}:2"
-         set pp_fcst = `qsub -N "run_mpas_${DATE}" -A "$mpas_account" -J ${IENS}-${last_member} \
-		     -q "$mpas_queue" -V \
-		     -l "select=${num_needed_nodes}:ncpus=${num_mpas_procs_per_node}:mpiprocs=${num_mpas_procs_per_node}" \
-		     -l walltime=${mpas_fcst_walltime}:00 ${SCRIPT_DIR}/run_mpas.csh`
+#         set pp_fcst = `qsub -N "run_mpas_${DATE}" -A "$mpas_account" -J ${IENS}-${last_member} \
+#		     -q "$mpas_queue" -V \
+#		     -l "select=${num_needed_nodes}:ncpus=${num_mpas_procs_per_node}:mpiprocs=${num_mpas_procs_per_node}" \
+#		     -l walltime=${mpas_fcst_walltime}:00 ${SCRIPT_DIR}/run_mpas.csh`
+         set pp_fcst = `qsub -N "run_mpas_${DATE}" ${SCRIPT_DIR}/run_mpas.csh`
         else if ( $batch_system == SBATCH ) then
           foreach mem ( `seq $IENS 1 $ENS_SIZE` )
             sbatch ${SCRIPT_DIR}/run_mpas.csh $mem 
@@ -343,7 +362,20 @@ while ( $DATE <= $END_INIT )
       if ( $batch_system == LSF ) then
 	 echo "MPASSIT functionality has not been implemented on LSF batch systems."
       else if ( $batch_system == PBS ) then
-	 echo "MPASSIT functionality has not been implemented on PBS batch systems."
+	 set num_needed_nodes = `echo "$NUM_PROCS_MPAS_ATM / $num_mpas_procs_per_node" | bc`
+	     # Use the next line if you DON'T want a dependency condition based on completion of run_mpas_init.csh
+	# set pp_fcst = `qsub -N "run_mpas_${DATE}" -A "$mpas_account" -J ${IENS}-${ENS_SIZE} -W depend=afterok:${pp_init} \
+#   set pp_fcst = `qsub -N "run_mpas_${DATE}" -A "$mpas_account" -J ${IENS}-${ENS_SIZE} \
+         set ii = `expr $IENS + 1`
+         set last_member = "${ii}:2"
+#         set pp_fcst = `qsub -N "run_mpassit_${DATE}" -A "$mpas_account" -J ${IENS}-${last_member} \
+#		     -q "$mpas_queue" -V \
+#		     -l "select=1:ncpus=128:mpiprocs=128:mem=209GB" \
+#		     -l walltime=${mpas_fcst_walltime}:00 ${SCRIPT_DIR}/run_mpassit.csh`
+         set pp_fcst = `qsub -N "run_mpassit_${DATE}" ${SCRIPT_DIR}/run_mpassit.csh`
+		     #-l "select=${num_needed_nodes}:ncpus=${num_mpas_procs_per_node}:mpiprocs=${num_mpas_procs_per_node}" \
+		     #-l walltime=${mpas_fcst_walltime}:00 ${SCRIPT_DIR}/run_mpassit.csh`
+
       else if ( $batch_system == SBATCH ) then
         foreach mem ( `seq $IENS 1 $ENS_SIZE` )
           sbatch ${SCRIPT_DIR}/run_mpassit.csh $mem
@@ -355,7 +387,18 @@ while ( $DATE <= $END_INIT )
       if ( $batch_system == LSF ) then
          echo "MPASSIT functionality has not been implemented on LSF batch systems."
       else if ( $batch_system == PBS ) then
-         echo "MPASSIT functionality has not been implemented on PBS batch systems."
+	 set num_needed_nodes = `echo "$NUM_PROCS_MPAS_ATM / $num_mpas_procs_per_node" | bc`
+	     # Use the next line if you DON'T want a dependency condition based on completion of run_mpas_init.csh
+	# set pp_fcst = `qsub -N "run_mpas_${DATE}" -A "$mpas_account" -J ${IENS}-${ENS_SIZE} -W depend=afterok:${pp_init} \
+#   set pp_fcst = `qsub -N "run_mpas_${DATE}" -A "$mpas_account" -J ${IENS}-${ENS_SIZE} \
+         set ii = `expr $IENS + 1`
+         set last_member = "${ii}:2"
+         set pp_fcst = `qsub -N "run_upp_${DATE}" -A "$mpas_account" -J ${IENS}-${last_member} \
+		     -q "$mpas_queue" -V \
+		     -l "select=1:ncpus=1:mpiprocs=1" \
+		     -l walltime=120:00 ${SCRIPT_DIR}/run_upp.csh`
+		     #-l "select=${num_needed_nodes}:ncpus=${num_mpas_procs_per_node}:mpiprocs=${num_mpas_procs_per_node}" \
+		     #-l walltime=${mpas_fcst_walltime}:00 ${SCRIPT_DIR}/run_mpassit.csh`
       else if ( $batch_system == SBATCH ) then
         foreach mem ( `seq $IENS 1 $ENS_SIZE` )
           sbatch ${SCRIPT_DIR}/run_upp.csh $mem

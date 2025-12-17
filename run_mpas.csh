@@ -11,13 +11,14 @@
 
 #PBS -S /bin/csh
 #PBS -N forecast
-#PBS -A NMMM0021
-#PBS -l walltime=10:00
-#PBS -q regular
+#PBS -A P48503002
+#PBS -l walltime=05:00:00
+#PBS -q main
 #PBS -o forecast.out
 #PBS -j oe 
 #PBS -k oed
-#PBS -l select=2:ncpus=12:mpiprocs=12
+#PBS -l select=20:ncpus=128:mpiprocs=128
+##PBS -l job_priority=premium
 #PBS -m n
 #PBS -V
 
@@ -27,7 +28,7 @@
 ##SBATCH -n 1200
 ##SBATCH --exclusive
 ##SBATCH --partition=hera
-##SBATCH -t 04:00:00
+##SBATCH -t 04444:00:00
 ##SBATCH -A fv3lam
 
 #
@@ -45,7 +46,8 @@ module load cray-mpich/8.1.25
 module load craype/2.7.20                                                                                                                                
 module load parallel-netcdf/1.12.3                                                                                                                       
 module load netcdf-mpi/4.9.2                                                                                                                             
-module load mkl
+module list
+#module load mkl
 
 #module load cmake/3.28.1
 #module load gnu
@@ -68,7 +70,8 @@ module load mkl
 if ( $batch_system == LSF ) then
    set mem = $LSB_JOBINDEX
 else if ( $batch_system == PBS ) then
-   set mem = $PBS_ARRAY_INDEX #PBS with "-J" flag (PBS pro)
+#   set mem = $PBS_ARRAY_INDEX #PBS with "-J" flag (PBS pro)
+   set mem = 1
 else if ( $batch_system == none ) then
    set mem = $1
 else if ( $batch_system == SBATCH ) then
@@ -110,6 +113,7 @@ foreach p ( $pp )
 end
 
 ln -sf $mpas_ics ./init.nc # link the initial conditions to the working directory
+ln -sf $MPAS_GRID_INFO_DIR/OK_1km.ugwp_oro_data.nc ./ugwp_oro_data.nc
 
 # If true, we want MPAS to look for a surface stream that reads a file with external sst/xice
 if ( $update_sst == .true. || $update_sst == true ) then

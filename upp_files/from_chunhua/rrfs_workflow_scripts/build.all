@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+rundir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+HOMErrfs="$(dirname "$rundir")"
+
+# kill the whole build process if Ctrl+C is entered
+# shellcheck disable=SC2317
+cleanup() {
+  echo "Caught Ctrl+C. Killing all background processes..."
+  pkill -P $$  # Kills all child processes of this script
+  exit 1
+}
+trap cleanup SIGINT SIGTERM
+
+if [[ "${1,,}" == "chem" ]] || [[ "${2,,}" == "chem" ]]; then
+  cd "${HOMErrfs}/sorc" || exit 1
+  echo "Option 'chem' found in the command line, downloading chem-specific MPAS-Model ......"
+  remote_url="https://github.com/cheMPAS-Fire/MPAS-Model"
+  branch_commit="chem/develop"  # a branch name or a commit hash
+  mv MPAS-Model "MPAS-Model.$(date +%s)" # save a copy of current MPAS-Model
+  git clone "${remote_url}" MPAS-Model
+  cd "${HOMErrfs}/sorc/MPAS-Model" || exit 1
+  git checkout "${branch_commit}"
+  git submodule update --init --recursive
+  # allow smoke_coarse in histlist_3d_smoke
+  cp "${HOMErrfs}/fix/chemistry/mpassit/histlist_3d_smoke.coarse" "${HOMErrfs}/fix/chemistry/mpassit/histlist_3d_smoke"
+fi
+cd "${HOMErrfs}/sorc" || exit 1
+
+echo "building all components, it may take more than one hour..."
+./build.wps  &> ./log.build.wps  2>&1 &
+./build.mpas &> ./log.build.mpas 2>&1 &
+./build.upp  &> ./log.build.upp  2>&1 &
+./build.mpassit  &> ./log.build.mpassit  2>&1 &
+./build.utils  &> ./log.build.utils  2>&1 &
+./build.rank_run  &> ./log.build.rank_run  2>&1 &
+
+if [[ "${1,,}" != "noda" ]] && [[ "${2,,}" != "noda" ]]; then
+  ./build.rdas &> ./log.build.rdas 2>&1 &
+fi
+
+wait
+nEXEC=$(find ../exec/* | wc -l)
+echo "check the exec/ directory ==== a total of ${nEXEC} executables"
+ls -lrth ../exec
+echo "check the build logs ===="
+ls -lrth log.build.*
+
+exit 0

@@ -18,8 +18,8 @@ if ( ! $?config_frac_seaice   )  set config_frac_seaice   = .false.
 if ( ! $?config_input_name    )  set config_input_name    = 'dum'
 if ( ! $?config_output_name   )  set config_output_name   = 'dum'
 if ( ! $?update_sst_interval )   set update_sst_interval = none
-if ( ! $?this_ungrib_vertical_levels ) set this_ungrib_vertical_levels = 32 #atj: changed these from "num_ungrib..." to "this_ungrib..." since diff for ic and lbc
-if ( ! $?this_ungrib_soil_levels )     set this_ungrib_soil_levels = 4
+if ( ! $?this_ungrib_vertical_levels ) set this_ungrib_vertical_levels = 51
+if ( ! $?this_ungrib_soil_levels )     set this_ungrib_soil_levels = 9
 
 #####
 
@@ -33,12 +33,16 @@ else
    set local_update_sst = .true.
 endif
 
+if ( ! $?blend_bdy_terrain ) then
+    set config_blend_bdy_terrain   = .false.
+else
+    set config_blend_bdy_terrain = $blend_bdy_terrain
+endif
+
 if ( $MPAS_REGIONAL == true || $MPAS_REGIONAL == .true. ) then
-   set config_blend_bdy_terrain = .true.
    set config_fg_interval = `expr $LBC_FREQ \* 3600`
    set config_apply_lbcs = .true.
 else
-   set config_blend_bdy_terrain = .false.
    set config_fg_interval = 86400
    set config_apply_lbcs = .false.
 endif
@@ -49,8 +53,8 @@ endif
 # $num_mpas_cells is set in driver.csh
 #---------------------------------------
 # MH Changed for testing --> currently hardcoded, could be changed to envar
-set config_pio_num_iotasks = 3
-set config_pio_stride      = 4
+set config_pio_num_iotasks = 0
+set config_pio_stride      = 1
 
 #---------------------------------------
 
@@ -87,11 +91,17 @@ cat > ./namelist.init_atmosphere << EOF
     config_interface_projection = 'linear_interpolation'
 /
 &dimensions
-    config_nvertlevels = $num_mpas_vert_levels
-    config_nsoillevels = $num_mpas_soil_levels
-    config_nfglevels = $this_ungrib_vertical_levels
-    config_nfgsoillevels = $this_ungrib_soil_levels
+    config_nvertlevels = 55
+!    config_nvertlevels = $num_mpas_vert_levels
+    config_nsoillevels = 9
+!    config_nsoillevels = $num_mpas_soil_levels
+!    config_nfglevels = $this_ungrib_vertical_levels
+    config_nfglevels = 51
+!    config_nfgsoillevels = $this_ungrib_soil_levels
+    config_nfgsoillevels = 9
     config_gocartlevels = 30
+    config_nsoilcat = 16
+    config_nvegopt = 1
 /
 &data_sources
     config_geog_data_path = '${WPS_GEOG_DIR}/'
@@ -99,22 +109,28 @@ cat > ./namelist.init_atmosphere << EOF
     config_sfc_prefix = '${ungrib_prefx_sst}'
     config_fg_interval = $config_fg_interval
     config_landuse_data = 'MODIFIED_IGBP_MODIS_NOAH_15s'
+    !config_soilcat_data = 'STATSGO'
+    config_soilcat_data = 'BNU'
     config_topo_data = 'GMTED2010'
     config_vegfrac_data = 'MODIS'
     config_albedo_data = 'MODIS'
     config_maxsnowalbedo_data = 'MODIS'
     config_supersample_factor = 12
+    config_lu_supersample_factor = 3
     config_30s_supersample_factor = 3
     config_use_spechumd = .false.
+    config_lai_data = 'MODIS'
 /
 &vertical_grid
     config_ztop = 25878.712
-    config_nsmterrain = 1
+!    config_ztop = 31000
+    config_nsmterrain = 2
     config_smooth_surfaces = .true.
     config_dzmin = 0.3
     config_nsm = 30
     config_tc_vertical_grid = .true.
     config_blend_bdy_terrain = ${config_blend_bdy_terrain}
+!    config_specified_zeta_levels = '/glade/campaign/ral/jntp/mayfield/dtc_ncar_mpas/static_data/L60.txt'
 /
 &interpolation_control
     config_extrap_airtemp = '$config_extrap_airtemp'
@@ -126,6 +142,9 @@ cat > ./namelist.init_atmosphere << EOF
     config_met_interp = $config_met_interp
     config_input_sst = $config_input_sst
     config_frac_seaice = $config_frac_seaice
+    config_native_gwd_gsl_static = .false.
+    config_aerosol_climo = .false.
+    config_tempo_rap = .true.    
 /
 &io
     config_pio_num_iotasks = $config_pio_num_iotasks
@@ -202,12 +221,13 @@ cat > ./namelist.atmosphere << EOF2
 
 &printout
     config_print_global_minmax_vel  = true
-    config_print_detailed_minmax_vel = true
+    config_print_detailed_minmax_vel = false
     config_print_global_minmax_sca  = true
 /
 
 &limited_area
    config_apply_lbcs = $config_apply_lbcs
+!   config_lbc_w = 'zero' !for ufs-community code, default value is nearest
 /
 
 &IAU
@@ -218,15 +238,25 @@ cat > ./namelist.atmosphere << EOF2
 &physics
    config_sst_update          = ${local_update_sst}
    config_sstdiurn_update     = .false.
+   config_gvf_update = .false.
    config_deepsoiltemp_update = .false.
    config_radtlw_interval     = '00:${radiation_frequency}:00'
    config_radtsw_interval     = '00:${radiation_frequency}:00'
    config_bucket_update       = 'none' !'1_00:00:00'
    config_microp_re           = .true.
-   config_lsm_scheme          = 'sf_noahmp'
-   num_soil_layers            = 4
+   config_tempo_aerosolaware = .true.
    config_physics_suite       = '${physics_suite}'
-   config_convection_scheme   = 'cu_ntiedtke'
+   config_microp_scheme       = 'mp_tempo'    
+   config_convection_scheme = 'off' 
+   config_pbl_scheme             = 'bl_mynnedmf'                  
+   config_gwdo_scheme         = 'bl_ugwp_gwdo'       
+   config_radt_lw_scheme      = 'rrtmg_lw'    
+   config_radt_sw_scheme     = 'rrtmg_sw'    
+   config_radt_cld_scheme     = 'cld_fraction_mynn' 
+   config_sfclayer_scheme    = 'sf_mynnsfclay'  
+   config_lsm_scheme           = 'sf_ruc'
+   config_tempo_hailaware = .true.
+   num_soil_layers            = 9
 /
 EOF2
 
@@ -254,15 +284,15 @@ interp_diag=.true.
 interp_hist=.true.
 wrf_mod_vars         = .true.
 esmf_log=.false.
-nx = 1578
-ny = 925
-dx = 3000.0
-dy = 3000.0
-ref_lat = 38.4
-ref_lon = -97.0
-truelat1 = 38.4
-truelat2 = 38.4
-stand_lon = -97.0 /
+nx = 820
+ny = 666
+dx = 1000.0
+dy = 1000.0
+ref_lat = 35.0
+ref_lon = -98.5
+truelat1 = 35.0
+truelat2 = 35.0
+stand_lon = -98.5 /
 EOF3
 
 
@@ -274,11 +304,19 @@ UPP:
 
 rm -f ./itag
 cat > ./itag << EOF4
-${mpassit_file}
-netcdf
-grib2
-${date_file_format_colon}
-RAPR
+&model_inputs
+fileName='${mpassit_file}'
+fileNameFlux='${mpassit_file}'
+IOFORM='netcdfpara'
+grib='grib2'
+DateStr='${date_file_format_colon}'
+MODELNAME='RAPR'
+SUBMODELNAME='MPAS'
+fileNameFlat='postxconfig-NT.txt'
+/
+&nampgb
+numx=2
+/
 EOF4
 
 #------------------------------------------

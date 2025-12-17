@@ -46,6 +46,7 @@ w
 pressure
 surface_pressure
 rho
+rho_base
 theta
 relhum
 divergence

@@ -107,7 +107,7 @@ cat > ./streams.atmosphere << EOF2
         clobber_mode="replace_files"
 	precision="single"
         io_type="netcdf4"
-        output_interval="${diag_output_interval}:00:00">
+        output_interval="01:00:00">
 
     <file name="${SCRIPT_DIR}/stream_list.atmosphere.output"/>
 </stream>
@@ -118,7 +118,7 @@ cat > ./streams.atmosphere << EOF2
         clobber_mode="replace_files"
 	precision="single"
 	io_type="netcdf4"
-        output_interval="${diag_output_interval}:00:00">
+        output_interval="01:00:00">
 
     <file name="${SCRIPT_DIR}/stream_list.atmosphere.diagnostics"/>
 </stream>
