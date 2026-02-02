@@ -17,46 +17,46 @@
 ##BSUB -R "span[ptile=32]"
 #
 # Derecho
-#PBS -S /bin/csh
-#PBS -N driver
-#PBS -A P48503002
-#PBS -l walltime=20:00
-#PBS -q main
-#PBS -o ./output_file
-#PBS -j oe 
-#PBS -k eod 
-#PBS -l select=1:ncpus=1:mpiprocs=1:mem=30gb
-#PBS -l job_priority=premium
-#PBS -m n    
-#PBS -V 
+##PBS -S /bin/csh
+##PBS -N driver
+##PBS -A P48503002
+##PBS -l walltime=20:00
+##PBS -q main
+##PBS -o ./output_file
+##PBS -j oe 
+##PBS -k eod 
+##PBS -l select=1:ncpus=1:mpiprocs=1:mem=30gb
+##PBS -l job_priority=premium
+##PBS -m n    
+##PBS -V 
 #
 # Hera uses slurm
-##SBATCH -J driver_expt
-##SBATCH -o driver_expt.o%j
-##SBATCH -N 1
-##SBATCH -n 1
-##SBATCH -p hera
-##SBATCH -t 02:00:00 
-##SBATCH -A fv3lam
+#SBATCH -J driver_expt
+#SBATCH -o driver_expt.o%j
+#SBATCH -N 1
+#SBATCH -n 1
+#SBATCH -p hera
+#SBATCH -t 02:00:00 
+#SBATCH -A fv3lam
 
 # Basic system information
-setenv batch_system         PBS # Type of submission system. 
-setenv num_procs_per_node   128  # Number of processors per node on the machine
+setenv batch_system         SBATCH # Type of submission system. 
+setenv num_procs_per_node   80  # Number of processors per node on the machine
 setenv run_cmd              "mpirun" # Command to run MPI executables #"mpirun.lsf"
 
 # Total number of processors to use (not the number of nodes)
-setenv NUM_PROCS_MPAS_ATM   1280
-setenv NUM_PROCS_MPAS_INIT  1280 # 180
-setenv num_mpas_procs_per_node  128  # Number of processors per node you want to use for MPAS forecasts (not intialization) -- not used for slurm
+setenv NUM_PROCS_MPAS_ATM   1600
+setenv NUM_PROCS_MPAS_INIT  800 # 180
+setenv num_mpas_procs_per_node  80  # Number of processors per node you want to use for MPAS forecasts (not intialization) -- not used for slurm
 setenv mpas_init_walltime 240      #Run-time (minutes) for MPAS initialization
 setenv mpas_fcst_walltime 480      #Run-time (minutes) for MPAS forecasts
-setenv mpas_account   "P48503002"  # core-hour accoun
-setenv mpas_queue     "main"   # system queue
+setenv mpas_account   "fv3lam"  # core-hour accoun
+setenv mpas_queue     "hera"   # system queue
 
 # Decide which stages to run (run if true, otherwise, false; lowercase to be used):
-setenv RUN_UNGRIB              false  # (true, false )
+setenv RUN_UNGRIB              true  # (true, false )
 setenv RUN_MPAS_INITIALIZE     false
-setenv RUN_MPAS_FORECAST       true
+setenv RUN_MPAS_FORECAST       false
 setenv RUN_MPASSIT             false
 setenv RUN_UPP                 false
 
@@ -64,17 +64,18 @@ setenv RUN_UPP                 false
 # Directories pointing to source code and required datasets #
 #######################################
 # Path and directory containing all code and scripts
-setenv   HOMEDIR              /glade/work/wmayfield/dtc_ncar_mpas
+setenv   HOMEDIR              /scratch4/BMC/fv3lam/MPAS_stoch/mayfield/
 
 # Path to all scripts (e.g., *.csh) under dtc_mpas_workflow
-setenv   SCRIPT_DIR           ${HOMEDIR}/dtc_mpas_workflow_20250721
+setenv   SCRIPT_DIR           ${HOMEDIR}/dtc_mpas_workflow_stoch
 
 # Path to MPAS model code - could be different from MPAS_INIT_CODE_DIR (MPAS initialization code; fetch the code: git clone https://github.com/MPAS-Dev/MPAS-Model.git)
 #setenv   MPAS_CODE_DIR        ${HOMEDIR}/MPAS-Model
 #setenv    MPAS_CODE_DIR       /glade/campaign/ral/jntp/mayfield/mpas_stoch/merge/MPAS-Model_spptint
 #setenv    MPAS_CODE_DIR       /glade/work/wmayfield/dtc_ncar_mpas/MPAS-Model_8.3.1
 #setenv    MPAS_CODE_DIR       /glade/work/wmayfield/dtc_ncar_mpas/MPAS-Model_ufs-community_20250922
-setenv    MPAS_CODE_DIR       /glade/work/wmayfield/dtc_ncar_mpas/MPAS-Model_ufs-community_v8.3.1-2.5
+#setenv    MPAS_CODE_DIR       /glade/work/wmayfield/dtc_ncar_mpas/MPAS-Model_ufs-community_v8.3.1-2.5
+setenv    MPAS_CODE_DIR       /scratch4/BMC/fv3lam/MPAS_stoch/mayfield/MPAS-Model_stoch_20251215
 
 # Path to MPAS-A initialization source code 
 setenv   MPAS_INIT_CODE_DIR   $MPAS_CODE_DIR
